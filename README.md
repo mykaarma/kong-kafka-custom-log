@@ -12,6 +12,7 @@ Here's a list of all the parameters which can be used in this plugin's configura
 | Form Parameter | default | description |
 | --- 						| --- | --- |
 | `name` 					                        |       | The name of the plugin to use, in this case `kafka-log` |
+| `config.custom_fields_mapping`          |       | The map containing the fields in the kong logs (`kong.log`) which are required to be published to kafka and their address. For eg, to publish the status code the key should be `status` (or any other desired name) and its value should be `response.status` because it can be accessed using `kong.log.response.status`  |
 | `config.bootstrap_servers` 	                    |       | List of bootstrap brokers in `host:port` format |
 | `config.topic` 			                        |       | Topic to publish to |
 | `config.timeout`   <br /> <small>Optional</small> | 10000 | Socket timeout in millis |
