@@ -1,9 +1,24 @@
-# Kafka-usage-log Plugin
+# kong-kafka-custom-log Plugin
 
 This plugin publishes logs from Kong to Apache Kafka.
 
 It requires [lua-resty-kafka](https://github.com/doujiang24/lua-resty-kafka) to be installed. <br/>
+**Note**: The version of `lua-resty-kafka` should be greater than `v0.09`. <br/>
 `luarocks install lua-resty-kafka`
+
+### Installation
+
+**Using Luarocks:**<br/>
+The plugin can be installed by using the following command:<br/>
+`luarocks install kong-kafka-custom-log`
+
+**Using source:**<br/>
+`git clone https://github.com/mykaarma/kong-kafka-custom-log`<br/>
+`cd kong-kafka-custom-log`<br/>
+`luarocks make`<br/>
+
+Then, add the plugin to the `plugins` key in `kong.conf` file.<br/>
+`plugins=kong-kafka-custom-log`
 
 ### Parameters
 
@@ -27,20 +42,30 @@ Here's a list of all the parameters which can be used in this plugin's configura
 | `config.producer_async_flush_timeout` <br /> <small>Optional</small>                       | 1000    | Maximum time interval in millis between buffer flushes in in asynchronous mode | 
 | `config.producer_async_buffering_limits_messages_in_memory` <br /> <small>Optional</small> | 50000   | Maximum number of messages that can be buffered in memory in asynchronous mode |
 
-### Log format
+### Sample configurations in terraform
 
-The logs are modified such that it publishes only the fields required for usage tracking in Kafka.
+```
+resource "kong_plugin" "kong-kafka-custom-log" {
+    name        = "kong-kafka-custom-log"
+    enabled     = true
+    config_json = <<EOT
+    {
+        "bootstrap_servers": ["kafka-server-1:9092", "kafka-server-2:9092"],
+        "topic": "kong-logs",
+        "custom_fields_mapping": {
+            "status": "response.status",
+            "consumerUsername": "consumer.username",
+            "consumerCustomID": "consumer.custom_id",
+            "uri": "request.uri",
+            "methodType": "request.method",
+            "start_time": "started_at",
+            "service": "service.name"
+        }
+    }
+EOT
+}
+```
 
-| Field | Description |
-| ---   | ---         |
-| status | The response status code. |
-| consumerUUID | The UUID of the Kong Consumer/Service Subscriber. |
-| scope | The scope of that route. |
-| uri | The uri of the route. |
-| methodType | The CRUD method, i.e. GET, POST, PUT, DELETE. |
-| start_time | The time at which Kong receives the request. |
-| service | The service name. |
-| responseTime | The time taken by the proxy server to return the response. |
-| dealerUUID | The dealer UUID. Multiple values get stored in the form of a list. |
-| departmentUUID | The department UUID. Multiple values get stored in the form of a list. |
-| requestUUID | The unique requestUUID. If the request does not have a requestUUID, it gets assigned automatically. |
+### Implementation details
+
+Original source rewritten from [kong-plugin-kafka-log](https://github.com/yskopets/kong-plugin-kafka-log) by [yskopets](https://github.com/yskopets), Thanks!
